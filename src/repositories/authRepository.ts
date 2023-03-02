@@ -50,4 +50,10 @@ export const authRepository = {
     });
     return result;
   },
+
+  //DELETE REFRESH TOKEN 
+  async deleteRefreshToken (id: string){
+    const result = await authCollections.deleteOne({id:id})
+    return result.deletedCount ===1 
+  }
 };

@@ -71,6 +71,27 @@ authRouter.post("/refresh-token", async (req: Request, res: Response) => {
   }
 });
 
+authRouter.post("/logout", async (req: Request, res: Response) => {
+  const userFindId: string | null = await jwtService.getUserIdByToken(
+    req.cookies.refreshToken
+  );
+  if (!userFindId) {
+    res.send(401);
+    return;
+  }
+  const userFind: AuthDBModel | null = await authRepository.findAuthByUserId(
+    userFindId
+  );
+
+  if (!userFind) {
+    res.send(401);
+    return;
+  }
+
+  const tokenRevoked = await authRepository.deleteRefreshToken(userFind.id);
+  tokenRevoked ? res.send(204) : res.send(401);
+});
+
 authRouter.get("/me", authMiddleware, async (req: Request, res: Response) => {
   const authGet: UserDBModel | null = await usersRepository.findUserById(
     req.user.id
