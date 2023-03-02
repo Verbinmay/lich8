@@ -89,7 +89,7 @@ authRouter.post("/logout", async (req: Request, res: Response) => {
   }
 
   const tokenRevoked = await authRepository.deleteRefreshToken(userFind.id);
-  tokenRevoked ? res.send(204) : res.send(401);
+  if (tokenRevoked)  {res.send(204)} else  {res.send(401)};
 });
 
 authRouter.get("/me", authMiddleware, async (req: Request, res: Response) => {
