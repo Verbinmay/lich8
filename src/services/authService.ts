@@ -15,8 +15,11 @@ export const authService = {
       const match = await bcrypt.compare(password, userFindLoginOrEmail.hash);
 
       if (match) {
-        const token = await jwtService.createJWT(userFindLoginOrEmail);
-        return { accessToken: token };
+        const tokenAccess = await jwtService.createJWTAccesToken(userFindLoginOrEmail);
+        const tokenRefresh = await jwtService.createJWTRefreshToken(userFindLoginOrEmail);
+        const refreshTokenInDB = await authRepository.addRefreshToken(userFindLoginOrEmail.id, tokenRefresh)
+if (refreshTokenInDB)
+        {return {accessToken: {accessToken: tokenAccess }, refreshToken:refreshTokenInDB};} else {return null}
       } else {
         return null;
       }

@@ -20,6 +20,8 @@ export const blogsCollections = db
   .collection<UserDBModel>("Users");
   export const commentsCollections = db
   .collection<CommentDBModel>("Comments");
+  export const authCollections = db
+  .collection("Auth");
 
 
 

@@ -25,12 +25,16 @@ authRouter.post(
   passwordValidation,
   inputValidationMiddleware,
   async (req: Request, res: Response) => {
-    const authPost: LoginSuccessViewModel | null = await authService.postAuth(
+    const authPost = await authService.postAuth(
       req.body.loginOrEmail,
       req.body.password
     );
     if (authPost) {
-      res.status(200).send(authPost);
+      res.cookie("token", authPost.refreshToken, {
+        httpOnly: true,
+        secure: true,
+      });
+      res.status(200).send(authPost.accessToken);
     } else {
       res.send(401);
     }

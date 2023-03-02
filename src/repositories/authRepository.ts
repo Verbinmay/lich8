@@ -1,5 +1,5 @@
 import { UserDBModel } from "../types/dbType";
-import { usersCollections } from "./db";
+import { authCollections, usersCollections } from "./db";
 
 export const authRepository = {
   //GETUSER BY LOGINOREMAIL
@@ -33,4 +33,11 @@ export const authRepository = {
       });
       return result;
     },
+
+
+    //ADD REFRESH TOKEN
+    async addRefreshToken(id: string, tokenRefresh: string){
+      const result = await authCollections.updateOne({id:id},{$set:{id:tokenRefresh}},{upsert: true})
+      return result.matchedCount ===1
+    }
 };
