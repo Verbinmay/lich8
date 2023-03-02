@@ -79,8 +79,9 @@ authRouter.post("/logout", async (req: Request, res: Response) => {
     res.send(401);
     return;
   }
-  const userFind: AuthDBModel | null = await authRepository.findAuthByUserId(
-    userFindId
+  const userFind: AuthDBModel | null = await authService.matchToken(
+    userFindId,
+    req.cookies.refreshToken
   );
 
   if (!userFind) {
@@ -89,7 +90,11 @@ authRouter.post("/logout", async (req: Request, res: Response) => {
   }
 
   const tokenRevoked = await authRepository.deleteRefreshToken(userFind.id);
-  if (tokenRevoked)  {res.send(204)} else  {res.send(401)};
+  if (tokenRevoked) {
+    res.send(204);
+  } else {
+    res.send(401);
+  }
 });
 
 authRouter.get("/me", authMiddleware, async (req: Request, res: Response) => {
