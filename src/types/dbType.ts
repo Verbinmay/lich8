@@ -44,4 +44,9 @@ export type UserDBModel = {
   };
 };
 
+export type AuthDBModel = {
+  id: string;
+  token: string;
+  _id: ObjectId;
+}
 

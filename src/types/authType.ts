@@ -17,6 +17,13 @@ export type RegistrationConfimationCodeModel = {
   code: string;
 };
 
-export type RegistrationEmailResenging = {
-  email: string
-}
+export type RegistrationEmailResengingModel = {
+  email: string;
+};
+
+export type CreatedTokenModel = {
+  accessToken: {
+    accessToken: string;
+  };
+  refreshToken: string;
+};

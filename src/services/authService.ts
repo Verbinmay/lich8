@@ -2,9 +2,10 @@ import bcrypt from "bcrypt";
 import { jwtService } from "../application/jwtService";
 import { authRepository } from "../repositories/authRepository";
 import { usersRepository } from "../repositories/usersRepository";
-import { UserDBModel } from "../types/dbType";
+import { AuthDBModel, UserDBModel } from "../types/dbType";
 import { v4 as uuidv4 } from "uuid";
 import add from "date-fns/add";
+import { tokenCreator } from "../functions";
 
 export const authService = {
   //AUTHPOST
@@ -15,11 +16,8 @@ export const authService = {
       const match = await bcrypt.compare(password, userFindLoginOrEmail.hash);
 
       if (match) {
-        const tokenAccess = await jwtService.createJWTAccesToken(userFindLoginOrEmail);
-        const tokenRefresh = await jwtService.createJWTRefreshToken(userFindLoginOrEmail);
-        const refreshTokenInDB = await authRepository.addRefreshToken(userFindLoginOrEmail.id, tokenRefresh)
-if (refreshTokenInDB)
-        {return {accessToken: {accessToken: tokenAccess }, refreshToken:refreshTokenInDB};} else {return null}
+       const result = await tokenCreator(userFindLoginOrEmail.id)
+       return result
       } else {
         return null;
       }
@@ -42,7 +40,7 @@ if (refreshTokenInDB)
           hours: 1,
           minutes: 3,
         }),
-      isConfirmed: false,
+        isConfirmed: false,
       },
     };
     const result: UserDBModel = await usersRepository.createUser(createdUser);
@@ -51,7 +49,8 @@ if (refreshTokenInDB)
 
   //CONFIRMEMAIL
   async confirmEmail(code: string) {
-    const userFind: UserDBModel|null = await authRepository.findUserByConfimationCode(code);
+    const userFind: UserDBModel | null =
+      await authRepository.findUserByConfimationCode(code);
     if (!userFind) {
       return false;
     }
@@ -64,7 +63,9 @@ if (refreshTokenInDB)
     if (userFind.emailConfimation.expirationDate < new Date()) {
       return false;
     }
-    const result:boolean = await authRepository.updateConfirmation(userFind.id);
+    const result: boolean = await authRepository.updateConfirmation(
+      userFind.id
+    );
     return result;
   },
 
@@ -75,10 +76,11 @@ if (refreshTokenInDB)
       email
     );
     if (!userFind) {
-      return null }
-      if (userFind.emailConfimation.isConfirmed) {
-        return false;
-      }
+      return null;
+    }
+    if (userFind.emailConfimation.isConfirmed) {
+      return false;
+    }
     const confimationCode = uuidv4();
     const expirationDate = add(new Date(), {
       hours: 1,
@@ -90,5 +92,19 @@ if (refreshTokenInDB)
       userFind.id
     );
     return userUpdate;
+  },
+
+  //MATCH TOKEN
+  async matchToken(id: string, refreshToken: string) {
+    const userFind:AuthDBModel|null = await authRepository.findAuthByUserId(id);
+    if (userFind) {
+      const result = userFind.token === refreshToken;
+      if(result){
+return userFind
+      } else 
+      return null ;
+    } else {
+      return null;
+    }
   },
 };

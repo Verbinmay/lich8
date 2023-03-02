@@ -1,7 +1,8 @@
 import { Request, Response, Router } from "express";
 import { emailsAdapter } from "../adapters/emailAdapter";
 import { registrationMessage } from "../adapters/messages";
-import { errorMaker } from "../functions";
+import { jwtService } from "../application/jwtService";
+import { errorMaker, tokenCreator } from "../functions";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import {
   emailCreateValidation,
@@ -14,8 +15,12 @@ import {
 import { authRepository } from "../repositories/authRepository";
 import { usersRepository } from "../repositories/usersRepository";
 import { authService } from "../services/authService";
-import { LoginSuccessViewModel, MeViewModel } from "../types/authType";
-import { UserDBModel } from "../types/dbType";
+import {
+  CreatedTokenModel,
+  LoginSuccessViewModel,
+  MeViewModel,
+} from "../types/authType";
+import { AuthDBModel, UserDBModel } from "../types/dbType";
 
 export const authRouter = Router({});
 
@@ -25,12 +30,12 @@ authRouter.post(
   passwordValidation,
   inputValidationMiddleware,
   async (req: Request, res: Response) => {
-    const authPost = await authService.postAuth(
+    const authPost: CreatedTokenModel | null = await authService.postAuth(
       req.body.loginOrEmail,
       req.body.password
     );
     if (authPost) {
-      res.cookie("token", authPost.refreshToken, {
+      res.cookie("refreshToken", authPost.refreshToken, {
         httpOnly: true,
         secure: true,
       });
@@ -40,6 +45,31 @@ authRouter.post(
     }
   }
 );
+authRouter.post("/refresh-token", async (req: Request, res: Response) => {
+  const userFindId: string | null = await jwtService.getUserIdByToken(
+    req.cookies.refreshToken
+  );
+  if (!userFindId) {
+    res.send(401);
+    return;
+  }
+  const match: AuthDBModel | null = await authService.matchToken(
+    userFindId,
+    req.cookies.refreshToken
+  );
+
+  if (match) {
+    const newTokens: CreatedTokenModel = await tokenCreator(userFindId);
+
+    res.cookie("refreshToken", newTokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+    });
+    res.status(200).send(newTokens.accessToken);
+  } else {
+    res.send(401);
+  }
+});
 
 authRouter.get("/me", authMiddleware, async (req: Request, res: Response) => {
   const authGet: UserDBModel | null = await usersRepository.findUserById(

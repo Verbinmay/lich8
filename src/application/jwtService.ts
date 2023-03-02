@@ -2,17 +2,17 @@ import jwt from "jsonwebtoken";
 import { setting } from "../settings";
 
 export const jwtService = {
-  async createJWTAccesToken(user:any) {
-    const token = jwt.sign({ userId: user.id }, setting.JWT_SECRET, {
-      expiresIn: "1h",
+  async createJWTAccesToken(id:string) {
+    const token = jwt.sign({ userId: id }, setting.JWT_SECRET, {
+      expiresIn: "10s",
     });
     return token;
   }
   ,
 
-  async createJWTRefreshToken (user:any) {
-    const token = jwt.sign({ userId: user.id }, setting.JWT_SECRET, {
-      expiresIn: "1h",
+  async createJWTRefreshToken (id:string) {
+    const token = jwt.sign({ userId: id }, setting.JWT_SECRET, {
+      expiresIn: "20s",
     });
     return token;
   }

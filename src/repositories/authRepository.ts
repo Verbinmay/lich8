@@ -1,4 +1,4 @@
-import { UserDBModel } from "../types/dbType";
+import { AuthDBModel, UserDBModel } from "../types/dbType";
 import { authCollections, usersCollections } from "./db";
 
 export const authRepository = {
@@ -10,10 +10,9 @@ export const authRepository = {
     return result;
   },
 
-
   //FIND USER BY CONFIRM CODE
   async findUserByConfimationCode(code: string) {
-    const result = await usersCollections.findOne({
+    const result: UserDBModel | null = await usersCollections.findOne({
       "emailConfimation.confimationCode": code,
     });
     return result;
@@ -26,18 +25,29 @@ export const authRepository = {
     );
     return true;
   },
-    //FIND USER BY CONFIRM CODE
-    async findUserByEmail(email: string) {
-      const result = await usersCollections.findOne({
-        email: email,
-      });
-      return result;
-    },
+  //FIND USER BY CONFIRM CODE
+  async findUserByEmail(email: string) {
+    const result: UserDBModel | null = await usersCollections.findOne({
+      email: email,
+    });
+    return result;
+  },
 
+  //ADD REFRESH TOKEN
+  async addRefreshToken(id: string, tokenRefresh: string) {
+    const result = await authCollections.updateOne(
+      { id: id },
+      { $set: { token: tokenRefresh } },
+      { upsert: true }
+    );
+    return result.matchedCount === 1;
+  },
 
-    //ADD REFRESH TOKEN
-    async addRefreshToken(id: string, tokenRefresh: string){
-      const result = await authCollections.updateOne({id:id},{$set:{id:tokenRefresh}},{upsert: true})
-      return result.matchedCount ===1
-    }
+  //FIND USER REFRESH TOKEN BY USER ID
+  async findAuthByUserId(id: string) {
+    const result: AuthDBModel|null  = await authCollections.findOne({
+      id: id,
+    });
+    return result;
+  },
 };
